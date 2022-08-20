@@ -137,3 +137,38 @@ impl MoonPhase {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use super::Phase::*;
+
+    #[test]
+    fn phase_detection() {
+        // Times taken from https://www.timeanddate.com/moon/phases/timezone/utc
+        let testcases = [
+            ("1999-01-02T02:49:00+00:00", Full),
+            ("1999-07-20T09:00:00+00:00", FirstQuarter),
+
+            ("2000-01-06T18:13:00+00:00", New), // Our offset is based on that
+            ("2000-01-14T13:34:00+00:00", FirstQuarter),
+            ("2000-01-21T04:40:00+00:00", Full),
+            ("2000-01-28T07:56:00+00:00", LastQuarter),
+            ("2000-12-25T17:21:00+00:00", New),
+
+            ("2022-01-02T18:33:00+00:00", New),
+            ("2022-01-15T23:49:00+00:00", WaxingGibbous),
+            ("2022-01-16T00:00:00+00:00", Full),
+            ("2022-01-17T23:48:00+00:00", Full),
+            ("2022-01-18T23:59:00+00:00", Full),
+            ("2022-01-19T16:45:00+00:00", WainingGibbous),
+        ];
+
+        for (time, exp) in testcases {
+            let time = DateTime::parse_from_rfc3339(time).unwrap();
+            let moon_phase = MoonPhase::new(time);
+            println!("Testing {}", time);
+            assert_eq!(moon_phase.phase_name, exp);
+        }
+    }
+}
