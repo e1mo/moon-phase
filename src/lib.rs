@@ -11,16 +11,17 @@ const MOON_LONGITUDE_PERIOD: f64 = 27.321582241; // Longitude oscillation
 const MOON_LONGITUDE_OFFSET: f64 = 2451555.8;
 
 // Names of lunar phases
-const PHASE_NAMES: &[&str] = &[
-    "New",
-    "Waxing Crescent",
-    "First Quarter",
-    "Waxing Gibbous",
-    "Full",
-    "Waning Gibbous",
-    "Last Quarter",
-    "Waning Crescent",
-];
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum Phase {
+    New,
+    WaxingCrescent,
+    FirstQuarter,
+    WaxingGibbous,
+    Full,
+    WainingGibbous,
+    LastQuarter,
+    WaningCrescent,
+}
 // Names of Zodiac constellations
 const ZODIAC_NAMES: [&str; 12] = [
     "Pisces",
@@ -51,7 +52,7 @@ pub struct MoonPhase {
     pub distance: f64,             // Moon distance in earth radii
     pub latitude: f64,             // Moon ecliptic latitude
     pub longitude: f64,            // Moon ecliptic longitude
-    pub phase_name: &'static str,  // New, Full, etc.
+    pub phase_name: Phase,  // New, Full, etc.
     pub zodiac_name: &'static str, // Constellation
 }
 
@@ -72,7 +73,17 @@ impl MoonPhase {
         // Calculate age and illuination fraction.
         let age = phase * MOON_SYNODIC_PERIOD;
         let fraction = (1. - (std::f64::consts::TAU * phase)).cos() / 2.;
-        let phase_name = PHASE_NAMES[(phase * 8.).round() as usize % 8];
+        let phase_name = match (phase * 8.).round() as usize % 8 {
+            0 => Phase::New,
+            1 => Phase::WaxingCrescent,
+            2 => Phase::FirstQuarter,
+            3 => Phase::WaxingGibbous,
+            4 => Phase::Full,
+            5 => Phase::WainingGibbous,
+            6 => Phase::LastQuarter,
+            7 => Phase::WaningCrescent,
+            _ => {panic!("This should be unreachable")}
+        };
         // Calculate distance fro anoalistic phase.
         let distance_phase =
             ((j_date - MOON_DISTANCE_OFFSET) / MOON_DISTANCE_PERIOD).fract();
