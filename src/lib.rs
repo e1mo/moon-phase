@@ -1,8 +1,11 @@
-use std::{f64::consts::TAU};
+//use std::{f64::consts::TAU};
 #[cfg(feature="chrono")]
 use chrono::{DateTime, offset::TimeZone};
 #[cfg(not(feature="chrono"))]
 use std::time::SystemTime;
+
+// Copied from the std libary, that way we are not limited to a minimum of rust 1.47
+pub const TAU: f64 = 6.28318530717958647692528676655900577_f64;
 
 const MOON_SYNODIC_PERIOD: f64 = 29.530588853; // Period of moon cycle in days.
 const MOON_SYNODIC_OFFSET: f64 = 2451550.26; // Reference cycle offset in days.
@@ -108,7 +111,7 @@ impl MoonPhase {
             ((j_date - MOON_SYNODIC_OFFSET) / MOON_SYNODIC_PERIOD).fract();
         // Calculate age and illuination fraction.
         let age = phase * MOON_SYNODIC_PERIOD;
-        let fraction = (1. - (std::f64::consts::TAU * phase)).cos() / 2.;
+        let fraction = (1. - (TAU * phase)).cos() / 2.;
         let mut phase_mod = (phase * 8.).round() % 8.;
         if phase_mod < 0. { // Otherwise, values lower than 0 would simply cause New
             phase_mod += 8.;
@@ -182,7 +185,7 @@ mod test {
     #[cfg(feature="chrono")]
     use chrono::prelude::*;
 
-    use pretty_assertions::{assert_eq};
+    //use pretty_assertions::{assert_eq};
 
     #[cfg(feature="chrono")]
     static CHRONO_TEST_CASES: [(&str, Phase); 13] = [
@@ -207,22 +210,26 @@ mod test {
     #[cfg(feature="chrono")]
     fn phase_detection() {
         // Times taken from https://www.timeanddate.com/moon/phases/timezone/utc
-        for (time, exp) in CHRONO_TEST_CASES {
+        for (time, exp) in &CHRONO_TEST_CASES {
             let time = DateTime::parse_from_rfc3339(time).unwrap();
             let moon_phase = MoonPhase::new(time);
-            assert_eq!(moon_phase.phase_name, exp, "Failed for {}", time);
+            assert_eq!(moon_phase.phase_name, *exp, "Failed for {}", time);
         }
     }
 
     #[test]
     #[cfg(feature="chrono")]
     pub fn chrono_seconds_same() {
-        for (time, _) in CHRONO_TEST_CASES {
+        for (time, _) in &CHRONO_TEST_CASES {
             let time = DateTime::parse_from_rfc3339(time).unwrap();
             let seconds = time.timestamp();
             let moon_phase_datetime = MoonPhase::new(time);
             let moon_phase_seconds = MoonPhase::from_secs(seconds);
-            assert_eq!(moon_phase_datetime, moon_phase_seconds, "Failed for DateTime: {} / Seconds: {}", time, seconds);
+            assert_eq!(
+                moon_phase_datetime, moon_phase_seconds,
+                "Failed for DateTime: {} / Seconds: {}",
+                time, seconds
+            );
         }
     }
 
@@ -247,9 +254,9 @@ mod test {
             (1642610700.0, WainingGibbous),     // 2022-01-19T16:45:00+00:00
         ];
 
-        for (secs, exp) in testcases {
-            let moon_phase = MoonPhase::from_secs_float(secs);
-            assert_eq!(moon_phase.phase_name, exp, "Failed for {}", secs);
+        for (secs, exp) in &testcases {
+            let moon_phase = MoonPhase::from_secs_float(*secs);
+            assert_eq!(&moon_phase.phase_name, exp, "Failed for {}", secs);
         }
     }
 
