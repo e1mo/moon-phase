@@ -57,7 +57,7 @@ pub struct MoonPhase {
 }
 
 fn julian_date<Tz: TimeZone>(time: DateTime<Tz>) -> f64 {
-    let secs = time.timestamp_micros() as f64 / 1_000.0;
+    let secs = time.timestamp_micros() as f64 / 1_000_000.0;
     secs / 86400. + 2440587.5
 }
 
