@@ -1,4 +1,3 @@
-//use std::{f64::consts::TAU};
 #[cfg(feature="chrono")]
 use chrono::{DateTime, offset::TimeZone};
 #[cfg(not(feature="chrono"))]
@@ -29,25 +28,58 @@ pub enum Phase {
     WaningCrescent,
 }
 // Names of Zodiac constellations
-const ZODIAC_NAMES: [&str; 12] = [
-    "Pisces",
-    "Aries",
-    "Taurus",
-    "Gemini",
-    "Cancer",
-    "Leo",
-    "Virgo",
-    "Libra",
-    "Scorpio",
-    "Sagittarius",
-    "Capricorn",
-    "Aquarius",
-];
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum Zodiac {
+    Pisces,
+    Aries,
+    Taurus,
+    Gemini,
+    Cancer,
+    Leo,
+    Virgo,
+    Libra,
+    Scorpio,
+    Sagittarius,
+    Capricorn,
+    Aquarius,
+}
+
 // Ecliptic angles of Zodiac constellations
 const ZODIAC_ANGLES: [f64; 12] = [
     33.18, 51.16, 93.44, 119.48, 135.30, 173.34, 224.17, 242.57, 271.26,
     302.49, 311.72, 348.58,
 ];
+
+impl Zodiac {
+    pub fn from_long(long: f64) -> Self {
+        use crate::Zodiac::*;
+        ZODIAC_ANGLES
+            .iter()
+            .enumerate()
+            .find_map(|(i, angle)| {
+                if long < *angle {
+                    Some(match i {
+                        0 => Pisces,
+                        1 => Aries,
+                        2 => Taurus,
+                        3 => Gemini,
+                        4 => Cancer,
+                        5 => Leo,
+                        6 => Virgo,
+                        7 => Libra,
+                        8 => Scorpio,
+                        9 => Sagittarius,
+                        10 => Capricorn,
+                        11 => Aquarius,
+                        _ => unimplemented!(),
+                    })
+                } else {
+                    None
+                }
+            })
+            .unwrap_or_else(|| Pisces)
+    }
+}
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct MoonPhase {
@@ -58,8 +90,8 @@ pub struct MoonPhase {
     pub distance: f64,             // Moon distance in earth radii
     pub latitude: f64,             // Moon ecliptic latitude
     pub longitude: f64,            // Moon ecliptic longitude
-    pub phase_name: Phase,  // New, Full, etc.
-    pub zodiac_name: &'static str, // Constellation
+    pub phase_name: Phase,          // New, Full, etc.
+    pub zodiac_name: Zodiac,        // Constellation
 }
 
 #[cfg(feature="chrono")]
@@ -152,17 +184,7 @@ impl MoonPhase {
             + 0.7 * (phase_tau).sin())
             % 360.;
 
-        let zodiac_name = ZODIAC_ANGLES
-            .iter()
-            .zip(ZODIAC_NAMES.iter())
-            .find_map(|(angle, name)| {
-                if longitude < *angle {
-                    Some(*name)
-                } else {
-                    None
-                }
-            })
-            .unwrap_or_else(|| ZODIAC_NAMES[0]);
+        let zodiac_name = Zodiac::from_long(longitude);
         MoonPhase {
             j_date,
             phase,
@@ -184,6 +206,8 @@ mod test {
     use super::Phase::*;
     #[cfg(feature="chrono")]
     use chrono::prelude::*;
+    #[cfg(not(feature="chrono"))]
+    use std::time::SystemTime;
 
     //use pretty_assertions::{assert_eq};
 
