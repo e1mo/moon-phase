@@ -73,7 +73,11 @@ impl MoonPhase {
         // Calculate age and illuination fraction.
         let age = phase * MOON_SYNODIC_PERIOD;
         let fraction = (1. - (std::f64::consts::TAU * phase)).cos() / 2.;
-        let phase_name = match (phase * 8.).round() as usize % 8 {
+        let mut phase_mod = (phase * 8.).round() % 8.;
+        if phase_mod < 0. { // Otherwise, values lower than 0 would simply cause New
+            phase_mod += 8.;
+        }
+        let phase_name = match phase_mod as usize {
             0 => Phase::New,
             1 => Phase::WaxingCrescent,
             2 => Phase::FirstQuarter,
