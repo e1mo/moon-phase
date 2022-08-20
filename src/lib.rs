@@ -1,4 +1,5 @@
-use std::{f64::consts::TAU, time::SystemTime};
+use std::{f64::consts::TAU};
+use chrono::{DateTime, offset::TimeZone};
 
 const MOON_SYNODIC_PERIOD: f64 = 29.530588853; // Period of moon cycle in days.
 const MOON_SYNODIC_OFFSET: f64 = 2451550.26; // Reference cycle offset in days.
@@ -54,16 +55,13 @@ pub struct MoonPhase {
     pub zodiac_name: &'static str, // Constellation
 }
 
-fn julian_date(time: SystemTime) -> f64 {
-    let secs = match time.duration_since(SystemTime::UNIX_EPOCH) {
-        Ok(duration) => duration.as_secs_f64(),
-        Err(earlier) => -1. * earlier.duration().as_secs_f64(),
-    };
+fn julian_date<Tz: TimeZone>(time: DateTime<Tz>) -> f64 {
+    let secs = time.timestamp_micros() as f64 / 1_000.0;
     secs / 86400. + 2440587.5
 }
 
 impl MoonPhase {
-    pub fn new(time: SystemTime) -> Self {
+    pub fn new<Tz: TimeZone>(time: DateTime<Tz>) -> Self {
         let j_date = julian_date(time);
 
         // Calculate illumination (synodic) phase.
